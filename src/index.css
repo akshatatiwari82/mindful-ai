@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 165 30% 98%;
+    --foreground: 200 25% 15%;
+
+    --card: 165 25% 97%;
+    --card-foreground: 200 25% 15%;
+
+    --popover: 165 25% 97%;
+    --popover-foreground: 200 25% 15%;
+
+    --primary: 168 45% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 165 25% 92%;
+    --secondary-foreground: 200 25% 20%;
+
+    --muted: 165 20% 94%;
+    --muted-foreground: 200 15% 45%;
+
+    --accent: 15 75% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 165 20% 88%;
+    --input: 165 20% 88%;
+    --ring: 168 45% 45%;
+
+    --radius: 1rem;
+
+    /* Custom tokens */
+    --gradient-calm: linear-gradient(135deg, hsl(168 45% 45%), hsl(180 40% 55%));
+    --gradient-warm: linear-gradient(135deg, hsl(15 75% 65%), hsl(25 80% 70%));
+    --gradient-soft: linear-gradient(180deg, hsl(165 30% 98%), hsl(165 25% 94%));
+    --gradient-hero: linear-gradient(135deg, hsl(165 30% 96%), hsl(180 35% 94%), hsl(168 40% 92%));
+    
+    --shadow-soft: 0 4px 20px -4px hsl(168 45% 45% / 0.15);
+    --shadow-card: 0 8px 30px -8px hsl(200 25% 15% / 0.08);
+    --shadow-glow: 0 0 40px hsl(168 45% 45% / 0.2);
+
+    --sidebar-background: 165 25% 97%;
+    --sidebar-foreground: 200 25% 20%;
+    --sidebar-primary: 168 45% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 165 25% 92%;
+    --sidebar-accent-foreground: 200 25% 20%;
+    --sidebar-border: 165 20% 88%;
+    --sidebar-ring: 168 45% 45%;
+  }
+
+  .dark {
+    --background: 200 25% 8%;
+    --foreground: 165 20% 95%;
+
+    --card: 200 25% 12%;
+    --card-foreground: 165 20% 95%;
+
+    --popover: 200 25% 12%;
+    --popover-foreground: 165 20% 95%;
+
+    --primary: 168 50% 50%;
+    --primary-foreground: 200 25% 8%;
+
+    --secondary: 200 20% 18%;
+    --secondary-foreground: 165 20% 90%;
+
+    --muted: 200 20% 18%;
+    --muted-foreground: 165 15% 60%;
+
+    --accent: 15 70% 60%;
+    --accent-foreground: 200 25% 8%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 20%;
+    --input: 200 20% 20%;
+    --ring: 168 50% 50%;
+
+    --gradient-calm: linear-gradient(135deg, hsl(168 50% 40%), hsl(180 45% 45%));
+    --gradient-hero: linear-gradient(135deg, hsl(200 25% 10%), hsl(200 20% 12%), hsl(195 25% 14%));
+
+    --sidebar-background: 200 25% 10%;
+    --sidebar-foreground: 165 20% 90%;
+    --sidebar-primary: 168 50% 50%;
+    --sidebar-primary-foreground: 200 25% 8%;
+    --sidebar-accent: 200 20% 18%;
+    --sidebar-accent-foreground: 165 20% 90%;
+    --sidebar-border: 200 20% 20%;
+    --sidebar-ring: 168 50% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-calm {
+    background: var(--gradient-calm);
+  }
+
+  .gradient-warm {
+    background: var(--gradient-warm);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+
+  .animate-breathe {
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+}

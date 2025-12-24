@@ -1,0 +1,7 @@
+project_id = "qmyvtoktmnsyqlespsyu"
+
+[functions.chat]
+verify_jwt = false
+
+[functions.mood-insights]
+verify_jwt = true
