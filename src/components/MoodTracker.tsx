@@ -267,37 +267,24 @@ const MoodTracker = () => {
         )}
       </Card>
 
-      {/* AI Insights */}
-      <Card className="glass-card p-6 rounded-2xl">
-        <h2 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          AI Insights
-        </h2>
-        <div className="space-y-4">
-          {insights.length > 0 ? (
-            insights.map((insight, i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-xl border ${
-                  insight.type === "pattern"
-                    ? "bg-primary/5 border-primary/10"
-                    : insight.type === "suggestion"
-                    ? "bg-accent/5 border-accent/10"
-                    : "bg-secondary/50 border-border"
-                }`}
-              >
-                <p className="text-sm text-foreground">
-                  <strong>{insight.title}:</strong> {insight.message}
-                </p>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 bg-muted/50 rounded-xl text-center text-muted-foreground">
-              Log your moods to unlock personalized AI insights!
-            </div>
-          )}
+      {/* AI INSIGHTS */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-purple-500" /> AI Insights
+            </h2>
+            {insights.length > 0 ? (
+                <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl">
+                    <p className="text-purple-800 font-medium text-sm">
+                        {insights[0].message}
+                    </p>
+                </div>
+            ) : (
+                <div className="text-center text-gray-400 py-8 bg-gray-50 rounded-xl border border-dashed">
+                    Log a mood to see insights
+                </div>
+            )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
