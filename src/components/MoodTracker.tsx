@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom"; // Uncomment if using login redirect
+// import { useNavigate } from "react-router-dom"; // Uncomment if you have routing set up
 import { TrendingUp, Calendar, Smile, Meh, Frown, Heart, Zap, Cloud, Sun, Loader2 } from "lucide-react";
-// import { useAuth } from "@/hooks/useAuth"; // Commented out to prevent crash
-// import { supabase } from "@/integrations/supabase/client"; // Commented out to prevent crash
 
 // --- TYPES ---
 type Mood = "great" | "good" | "okay" | "low" | "struggling";
@@ -15,12 +13,7 @@ interface MoodEntry {
   created_at: string;
 }
 
-interface Insight {
-  type: string;
-  title: string;
-  message: string;
-}
-
+// --- CONFIG ---
 const moodOptions = [
   { value: "great", label: "Great", icon: <Sun className="w-8 h-8" />, color: "bg-green-100 text-green-600 border-green-200" },
   { value: "good", label: "Good", icon: <Smile className="w-8 h-8" />, color: "bg-emerald-100 text-emerald-600 border-emerald-200" },
@@ -30,191 +23,181 @@ const moodOptions = [
 ];
 
 const MoodTracker = () => {
-  // const { user, loading: authLoading } = useAuth(); // Commented out to prevent crash
-  // const navigate = useNavigate();
+  // const navigate = useNavigate(); // Uncomment if using router
 
   // --- STATE ---
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
-  const [note, setNote] = useState("");
   const [energy, setEnergy] = useState(5);
-  const [entries, setEntries] = useState<MoodEntry[]>([]);
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-
-  // --- INITIAL LOAD (Simulated) ---
-  useEffect(() => {
-    // Simulate fetching data so screen isn't empty
-    setIsLoading(true);
-    setTimeout(() => {
-        setEntries([
-            { id: "1", mood: "good", note: "Code is finally working!", energy: 8, created_at: new Date().toDateString() }
-        ]);
-        setIsLoading(false);
-    }, 1000);
-  }, []);
+  const [entries, setEntries] = useState<MoodEntry[]>([]);
+  const [insightMessage, setInsightMessage] = useState("Log your mood to see insights!");
 
   // --- HANDLERS ---
   const handleSaveMood = async () => {
     if (!selectedMood) return;
     setIsSaving(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Create Entry Locally
+    // Simulate network delay for realism
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Create a new entry object
     const newEntry: MoodEntry = {
-        id: Date.now().toString(),
-        mood: selectedMood as Mood,
-        note: note,
-        energy: energy,
-        created_at: new Date().toDateString(),
+      id: Date.now().toString(),
+      mood: selectedMood as Mood,
+      note: note,
+      energy: energy,
+      created_at: new Date().toLocaleTimeString(),
     };
 
-    setEntries([newEntry, ...entries]); // Update UI immediately
-    generateInsight(selectedMood); // Generate local insight
+    // Update local list of entries (Latest first)
+    const updatedEntries = [newEntry, ...entries];
+    setEntries(updatedEntries);
     
+    // Generate an "AI Insight" based on the new mood
+    generateInsight(selectedMood);
+
     // Reset Form
     setSelectedMood(null);
     setNote("");
     setEnergy(5);
     setIsSaving(false);
     
-    alert("Mood logged! (This is running in Offline Mode)");
+    alert("Mood Logged Successfully!");
   };
 
   const generateInsight = (mood: Mood) => {
-    let message = "";
-    if (mood === "low" || mood === "struggling") message = "It seems tough right now. Try the Breathing Exercise in the Exercises tab.";
-    else if (mood === "great") message = "Awesome! Hold onto this feeling.";
-    else message = "Stay balanced and keep tracking.";
-    
-    setInsights([{ type: "suggestion", title: "New Insight", message }]);
+    if (mood === "low" || mood === "struggling") {
+      setInsightMessage("💙 It looks like you're having a tough time. Try the 'Box Breathing' exercise in the Exercises tab.");
+    } else if (mood === "great" || mood === "good") {
+      setInsightMessage("🌟 You're doing great! Use this energy to tackle a difficult task or help a friend.");
+    } else {
+      setInsightMessage("🌱 You are balanced. A short walk might be a nice way to stay grounded.");
+    }
   };
 
-  // --- UI RENDER (Using standard HTML div/button instead of Card/Button) ---
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4 animate-in fade-in duration-500">
+    <div className="max-w-3xl mx-auto p-4 space-y-8">
       
       {/* HEADER */}
-      <div className="text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-          How are you feeling?
-        </h1>
-        <p className="text-gray-500">
-          Track your emotional journey • AI-powered insights
-        </p>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-gray-800">Mood Tracker</h1>
+        <p className="text-gray-500">How are you feeling right now?</p>
       </div>
 
       {/* MAIN CARD */}
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         
-        {/* MOOD SELECTION */}
-        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Heart className="w-5 h-5 text-purple-500" />
-          Select Your Mood
-        </h2>
-        <div className="grid grid-cols-5 gap-3 mb-6">
-          {moodOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setSelectedMood(option.value as Mood)}
-              className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all hover:scale-105 ${
-                selectedMood === option.value
-                  ? `${option.color} border-current shadow-md`
-                  : "bg-white border-gray-200 hover:border-purple-200"
-              }`}
-            >
-              {option.icon}
-              <span className="text-xs font-medium hidden sm:block">{option.label}</span>
-            </button>
-          ))}
+        {/* SECTION 1: MOOD SELECTOR */}
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-pink-500" /> Select Mood
+          </h2>
+          <div className="grid grid-cols-5 gap-2">
+            {moodOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedMood(option.value as Mood)}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                  selectedMood === option.value
+                    ? `${option.color} border-current scale-105 shadow-md`
+                    : "bg-gray-50 border-transparent hover:bg-gray-100"
+                }`}
+              >
+                {option.icon}
+                <span className="text-xs font-medium mt-1 hidden sm:block">{option.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* ENERGY LEVEL */}
-        <div className="mb-6">
-          <label className="flex items-center gap-2 text-sm font-medium mb-3 text-gray-700">
-            <Zap className="w-4 h-4 text-yellow-500" />
-            Energy Level: {energy}/10
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            value={energy}
-            onChange={(e) => setEnergy(Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-          />
-        </div>
+        {/* SECTION 2: SLIDER & NOTES */}
+        <div className="p-6 space-y-6 bg-gray-50/50">
+          
+          {/* Energy Slider */}
+          <div>
+            <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
+              <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-500"/> Energy Level</span>
+              <span className="text-gray-400">{energy}/10</span>
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={energy}
+              onChange={(e) => setEnergy(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+            />
+          </div>
 
-        {/* NOTE INPUT */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2 text-gray-700">Add a note (optional)</label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="What's contributing to how you feel today?"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none resize-none"
-            rows={3}
-          />
-        </div>
+          {/* Journaling Textarea */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Journal Note (Optional)</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Why do you feel this way? (e.g., 'Had a great lunch', 'Stressed about exams')"
+              className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none bg-white"
+              rows={3}
+            />
+          </div>
 
-        {/* SAVE BUTTON */}
-        <button
-          onClick={handleSaveMood}
-          disabled={!selectedMood || isSaving}
-          className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${
-            !selectedMood || isSaving
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 shadow-lg"
-          }`}
-        >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Today's Check-in"}
-        </button>
+          {/* Save Button */}
+          <button
+            onClick={handleSaveMood}
+            disabled={!selectedMood || isSaving}
+            className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${
+              !selectedMood || isSaving
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700 shadow-lg hover:shadow-purple-500/20"
+            }`}
+          >
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Check-in"}
+          </button>
+        </div>
       </div>
 
-      {/* WEEKLY & INSIGHTS GRID */}
+      {/* INSIGHTS & HISTORY SECTION */}
       <div className="grid md:grid-cols-2 gap-6">
         
-        {/* RECENT ENTRIES */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-gray-500" /> Recent Entries
-            </h2>
-            {isLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="animate-spin text-purple-500"/></div>
-            ) : (
-                <div className="space-y-3">
-                    {entries.map((entry) => (
-                        <div key={entry.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                            <div className={`w-3 h-3 rounded-full ${entry.mood === 'good' || entry.mood === 'great' ? 'bg-green-400' : 'bg-red-400'}`} />
-                            <div>
-                                <p className="text-sm font-medium capitalize">{entry.mood}</p>
-                                <p className="text-xs text-gray-400">{entry.created_at}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+        {/* AI Insight Card */}
+        <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-2xl border border-purple-100 shadow-sm">
+          <h3 className="font-semibold text-purple-900 flex items-center gap-2 mb-2">
+            <TrendingUp className="w-5 h-5" /> AI Insight
+          </h3>
+          <p className="text-purple-700 text-sm leading-relaxed">
+            {insightMessage}
+          </p>
         </div>
 
-        {/* AI INSIGHTS */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-500" /> AI Insights
-            </h2>
-            {insights.length > 0 ? (
-                <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl">
-                    <p className="text-purple-800 font-medium text-sm">
-                        {insights[0].message}
-                    </p>
-                </div>
+        {/* Recent History List */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <h3 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
+            <Calendar className="w-5 h-5 text-gray-500" /> Recent Entries
+          </h3>
+          <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+            {entries.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">No entries yet.</p>
             ) : (
-                <div className="text-center text-gray-400 py-8 bg-gray-50 rounded-xl border border-dashed">
-                    Log a mood to see insights
+              entries.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-50 last:border-0">
+                  <div className={`w-2 h-2 rounded-full ${
+                    entry.mood === 'great' || entry.mood === 'good' ? 'bg-green-400' :
+                    entry.mood === 'okay' ? 'bg-blue-400' : 'bg-red-400'
+                  }`} />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium capitalize text-gray-700">{entry.mood}</span>
+                      <span className="text-xs text-gray-400">{entry.created_at}</span>
+                    </div>
+                    {entry.note && <p className="text-xs text-gray-500 truncate max-w-[200px]">{entry.note}</p>}
+                  </div>
                 </div>
+              ))
             )}
+          </div>
         </div>
+
       </div>
     </div>
   );
