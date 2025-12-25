@@ -1,49 +1,30 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/hooks/useAuth";
+import Navbar from "./components/Navbar";
+import MoodTracker from "./components/MoodTracker";
+import Exercises from "./components/Exercises";
+import AdminDashboard from "./components/AdminDashboard";
 
-// 1. IMPORT THE LANGUAGE PROVIDER
-import { LanguageProvider } from "./LanguageContext"; 
+function App() {
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        {/* Navbar stays at the top always */}
+        <Navbar />
 
-import Index from "./pages/Index";
-import Chat from "./pages/Chat";
-import Mood from "./pages/Mood";
-import Exercises from "./pages/Exercises";
-import Emergency from "./pages/Emergency";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {/* 2. WRAP THE APP WITH LANGUAGE PROVIDER HERE */}
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/mood" element={<Mood />} />
-                <Route path="/exercises" element={<Exercises />} />
-                <Route path="/emergency" element={<Emergency />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
-);
+        {/* Main Content Area */}
+        <main className="py-8">
+          <Routes>
+            {/* The "/" path means this is the FIRST page you see (Home) */}
+            <Route path="/" element={<MoodTracker />} />
+            
+            {/* These are the add-on pages */}
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
+}
 
 export default App;
