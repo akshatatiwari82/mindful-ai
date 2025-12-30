@@ -1,135 +1,207 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
-import { 
-  TrendingUp, 
-  Calendar, 
-  Smile, 
-  Meh, 
-  Frown, 
-  Heart, 
-  Zap, 
-  Cloud, 
-  Sun, 
-  Loader2 
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { TrendingUp, Calendar, Smile, Meh, Frown, Heart, Zap, Cloud, Sun, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-// Initialize Supabase
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-);
+type Mood = "great" | "good" | "okay" | "low" | "struggling";
+
+interface MoodEntry {
+  id: string;
+  mood: Mood;
+  note: string | null;
+  energy: number;
+  created_at: string;
+}
+
+interface Insight {
+  type: string;
+  title: string;
+  message: string;
+}
+
+const moodOptions: { value: Mood; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: "great", label: "Great", icon: <Sun className="w-6 h-6" />, color: "bg-green-100 text-green-600 border-green-200" },
+  { value: "good", label: "Good", icon: <Smile className="w-6 h-6" />, color: "bg-emerald-100 text-emerald-600 border-emerald-200" },
+  { value: "okay", label: "Okay", icon: <Cloud className="w-6 h-6" />, color: "bg-blue-100 text-blue-600 border-blue-200" },
+  { value: "low", label: "Low", icon: <Meh className="w-6 h-6" />, color: "bg-amber-100 text-amber-600 border-amber-200" },
+  { value: "struggling", label: "Struggling", icon: <Frown className="w-6 h-6" />, color: "bg-rose-100 text-rose-600 border-rose-200" },
+];
 
 const MoodTracker = () => {
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // State Management
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [energy, setEnergy] = useState(5);
+  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [note, setNote] = useState("");
+  const [energy, setEnergy] = useState(5);
+  const [entries, setEntries] = useState<MoodEntry[]>([]);
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Mock Data (You can replace this with real data fetching later)
-  const [entries, setEntries] = useState([
-    { id: 1, mood: "good", energy: 7, note: "Feeling optimistic about the project!", date: "Just now" }
-  ]);
 
-  const moodOptions = [
-    { value: "great", label: "Great", icon: <Sun className="w-8 h-8" />, color: "bg-green-100 text-green-600 border-green-200" },
-    { value: "good", label: "Good", icon: <Smile className="w-8 h-8" />, color: "bg-emerald-100 text-emerald-600 border-emerald-200" },
-    { value: "okay", label: "Okay", icon: <Cloud className="w-8 h-8" />, color: "bg-blue-100 text-blue-600 border-blue-200" },
-    { value: "low", label: "Low", icon: <Meh className="w-8 h-8" />, color: "bg-amber-100 text-amber-600 border-amber-200" },
-    { value: "struggling", label: "Struggling", icon: <Frown className="w-8 h-8" />, color: "bg-rose-100 text-rose-600 border-rose-200" },
-  ];
-
-  const handleSave = async () => {
-    setIsSaving(true);
-
-    // --- 🔒 AUTH CHECK START ---
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      alert("Please log in or register to save your mood history.");
-      navigate("/login"); // Redirects to your login page
-      setIsSaving(false);
-      return;
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
     }
-    // --- 🔒 AUTH CHECK END ---
+  }, [user, authLoading, navigate]);
 
+  useEffect(() => {
+    if (user) {
+      fetchEntries();
+      fetchInsights();
+    }
+  }, [user]);
+
+  const fetchEntries = async () => {
+    setIsLoading(true);
     try {
-      console.log("Saving mood for user:", session.user.id);
-      
-      // OPTIONAL: Actual Database Insert Logic
-      /*
-      const { error } = await supabase.from('mood_entries').insert({
-        user_id: session.user.id,
-        mood: selectedMood,
-        energy: energy,
-        note: note
-      });
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data, error } = await supabase
+        .from("mood_entries")
+        .select("*")
+        .gte("created_at", sevenDaysAgo.toISOString())
+        .order("created_at", { ascending: true });
+
       if (error) throw error;
-      */
+      setEntries((data as MoodEntry[]) || []);
+    } catch (error) {
+      console.error("Error fetching entries:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Update local UI for immediate feedback
-      setEntries([
-        { 
-          id: Date.now(), 
-          mood: selectedMood || "okay", 
-          energy, 
-          note, 
-          date: new Date().toLocaleTimeString() 
-        }, 
-        ...entries
-      ]);
+  const fetchInsights = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("mood-insights");
+      if (error) throw error;
+      setInsights(data?.insights || []);
+    } catch (error) {
+      console.error("Error fetching insights:", error);
+    }
+  };
 
-      // Reset Form
+  const handleSaveMood = async () => {
+    if (!selectedMood || !user) return;
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.from("mood_entries").insert({
+        user_id: user.id,
+        mood: selectedMood,
+        energy,
+        note: note || null,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Mood logged!",
+        description: "Your check-in has been saved.",
+      });
+
       setSelectedMood(null);
       setNote("");
       setEnergy(5);
-      alert("Mood saved successfully!");
-
+      fetchEntries();
+      fetchInsights();
     } catch (error) {
       console.error("Error saving mood:", error);
-      alert("Failed to save entry. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to save your mood entry.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
+  const getMoodColor = (mood: Mood) => {
+    const option = moodOptions.find((m) => m.value === mood);
+    return option?.color || "";
+  };
+
+  const getWeekEntries = () => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay() + 1);
+
+    return days.map((day, i) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      const dateStr = date.toDateString();
+      
+      const entry = entries.find((e) => {
+        const entryDate = new Date(e.created_at);
+        return entryDate.toDateString() === dateStr;
+      });
+
+      return { day, entry };
+    });
+  };
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-500 pt-24">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-800">Daily Check-in</h1>
-        <p className="text-gray-500">How are you feeling right now?</p>
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+          How are you feeling?
+        </h1>
+        <p className="text-muted-foreground">
+          Track your emotional journey • AI-powered insights
+        </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6">
-        {/* Mood Selection */}
-        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Heart className="w-5 h-5 text-purple-500" /> Select Mood
+      {/* Mood Selection */}
+      <Card className="glass-card p-6 rounded-2xl">
+        <h2 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
+          <Heart className="w-5 h-5 text-primary" />
+          Select Your Mood
         </h2>
-        <div className="grid grid-cols-5 gap-2 mb-6">
+        <div className="grid grid-cols-5 gap-3 mb-6">
           {moodOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => setSelectedMood(option.value)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                 selectedMood === option.value
-                  ? `${option.color} border-current scale-105 shadow-md`
-                  : "bg-gray-50 border-transparent hover:bg-gray-100"
+                  ? `${option.color} border-current shadow-soft`
+                  : "bg-background border-border hover:border-primary/30"
               }`}
             >
               {option.icon}
-              <span className="text-xs font-medium mt-1 hidden sm:block">{option.label}</span>
+              <span className="text-xs font-medium">{option.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Energy Slider */}
+        {/* Energy Level */}
         <div className="mb-6">
-          <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-500"/> Energy Level</span>
-            <span className="text-gray-400">{energy}/10</span>
+          <label className="flex items-center gap-2 text-sm font-medium mb-3">
+            <Zap className="w-4 h-4 text-accent" />
+            Energy Level: {energy}/10
           </label>
           <input
             type="range"
@@ -137,55 +209,95 @@ const MoodTracker = () => {
             max="10"
             value={energy}
             onChange={(e) => setEnergy(Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+            className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
           />
         </div>
 
-        {/* Note Area */}
+        {/* Note */}
         <div className="mb-6">
-          <textarea
+          <label className="block text-sm font-medium mb-2">Add a note (optional)</label>
+          <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Add a note (optional)..."
-            className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 outline-none resize-none bg-white"
+            placeholder="What's contributing to how you feel today?"
+            className="resize-none"
             rows={3}
           />
         </div>
 
-        {/* Save Button */}
-        <button
-          onClick={handleSave}
+        <Button
+          onClick={handleSaveMood}
           disabled={!selectedMood || isSaving}
-          className={`w-full py-3 rounded-lg font-bold text-white transition-all flex items-center justify-center gap-2 ${
-            !selectedMood || isSaving
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-700 shadow-lg"
-          }`}
+          variant="hero"
+          className="w-full"
         >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Check-in"}
-        </button>
-      </div>
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Today's Check-in"}
+        </Button>
+      </Card>
 
-      {/* History List */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-          <Calendar className="w-5 h-5 text-gray-500" /> Recent Entries
-        </h3>
-        <div className="space-y-3">
-          {entries.map((entry) => (
-            <div key={entry.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div className={`w-3 h-3 rounded-full ${['good', 'great'].includes(entry.mood) ? 'bg-green-400' : 'bg-orange-400'}`} />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold capitalize text-gray-700">{entry.mood}</span>
-                  <span className="text-xs text-gray-400">• {entry.date}</span>
+      {/* Weekly Overview */}
+      <Card className="glass-card p-6 rounded-2xl">
+        <h2 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary" />
+          Your Week at a Glance
+        </h2>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-2 mb-4">
+            {getWeekEntries().map(({ day, entry }) => (
+              <div key={day} className="text-center">
+                <span className="text-xs text-muted-foreground">{day}</span>
+                <div
+                  className={`mt-2 p-3 rounded-xl ${
+                    entry ? getMoodColor(entry.mood as Mood) : "bg-muted/50"
+                  }`}
+                >
+                  {entry ? (
+                    moodOptions.find((m) => m.value === entry.mood)?.icon
+                  ) : (
+                    <div className="w-6 h-6 mx-auto opacity-30">—</div>
+                  )}
                 </div>
-                {entry.note && <p className="text-xs text-gray-500 mt-1">{entry.note}</p>}
               </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* AI Insights */}
+      <Card className="glass-card p-6 rounded-2xl">
+        <h2 className="font-display font-semibold text-lg mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          AI Insights
+        </h2>
+        <div className="space-y-4">
+          {insights.length > 0 ? (
+            insights.map((insight, i) => (
+              <div
+                key={i}
+                className={`p-4 rounded-xl border ${
+                  insight.type === "pattern"
+                    ? "bg-primary/5 border-primary/10"
+                    : insight.type === "suggestion"
+                    ? "bg-accent/5 border-accent/10"
+                    : "bg-secondary/50 border-border"
+                }`}
+              >
+                <p className="text-sm text-foreground">
+                  <strong>{insight.title}:</strong> {insight.message}
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="p-4 bg-muted/50 rounded-xl text-center text-muted-foreground">
+              Log your moods to unlock personalized AI insights!
             </div>
-          ))}
+          )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
