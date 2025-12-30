@@ -1,6 +1,89 @@
-import { ShieldAlert, Phone, UserCheck, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { ShieldAlert, Phone, UserCheck, AlertTriangle, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const TherapistPortal = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // --- LOGIN STATE ---
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simple hardcoded check for demo purposes
+    if (username === "admin" && password === "mindful") {
+      setIsAuthenticated(true);
+      setError("");
+    } else {
+      setError("Invalid credentials. Try 'admin' / 'mindful'");
+    }
+  };
+
+  // --- IF NOT LOGGED IN: SHOW LOGIN SCREEN ---
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 animate-in fade-in zoom-in-95">
+        <Card className="w-full max-w-md p-8 bg-white shadow-2xl border-t-4 border-slate-800">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-800">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Therapist Portal</h1>
+            <p className="text-slate-500 text-sm">Restricted access for medical staff only.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500 ml-1">Therapist ID</label>
+              <input 
+                type="text" 
+                placeholder="Enter ID (admin)" 
+                className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-800 bg-slate-50"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500 ml-1">Password</label>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Enter Password (mindful)" 
+                  className="w-full p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-800 bg-slate-50"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+
+            <Button type="submit" className="w-full bg-slate-900 hover:bg-black text-white py-6 text-lg">
+              <LogIn className="w-5 h-5 mr-2" /> Login
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-xs text-slate-400">Authorized Personnel Only • 256-bit Encrypted</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // --- IF LOGGED IN: SHOW DASHBOARD ---
   const patients = [
     { id: 1, name: "Student A", status: "Critical", note: "Reported panic attack during finals.", action: "Connect" },
     { id: 2, name: "Student B", status: "Stable", note: "Mood improving, logging consistently.", action: "None" },
@@ -16,9 +99,14 @@ const TherapistPortal = () => {
           <h1 className="text-2xl font-bold text-slate-800">Therapist Dashboard</h1>
           <p className="text-slate-500">Real-time monitoring of student population.</p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold animate-pulse">
-          <ShieldAlert className="w-5 h-5" /> Live Alerts Active
-        </button>
+        <div className="flex gap-3">
+             <button onClick={() => setIsAuthenticated(false)} className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 rounded-lg transition-all">
+                Logout
+             </button>
+            <button className="flex items-center gap-2 px-6 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold animate-pulse">
+              <ShieldAlert className="w-5 h-5" /> Live Alerts Active
+            </button>
+        </div>
       </div>
 
       {/* Patient Table */}
