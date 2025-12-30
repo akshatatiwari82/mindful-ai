@@ -1,27 +1,32 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, User, Bot, Loader2, AlertCircle } from "lucide-react";
-
-// The Connection to your Supabase Backend
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Send, Bot, User, Loader2, Shield } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
+  timestamp: Date;
 }
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
 const ChatInterface = () => {
-  // --- STATE ---
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: "assistant", 
-      content: "Hello! I'm here to listen and support you. How are you feeling today? Remember, this is a safe space, and our conversation is end-to-end encrypted. 💚" 
-    }
+    {
+      id: "1",
+      role: "assistant",
+      content: "Hello! I'm here to listen and support you. How are you feeling today? Remember, this is a safe space, and our conversation is end-to-end encrypted. 💚",
+      timestamp: new Date(),
+    },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- AUTO SCROLL ---
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -30,113 +35,181 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  // --- SEND LOGIC ---
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { role: "user" as const, content: input.trim() };
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input.trim();
     setInput("");
     setIsLoading(true);
 
+    let assistantContent = "";
+
     try {
+      const chatMessages = [...messages, userMessage].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ messages: chatMessages }),
       });
 
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      }
 
-      // Handle Streaming Response
-      const reader = response.body?.getReader();
+      if (!response.body) {
+        throw new Error("No response body");
+      }
+
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let assistantContent = "";
-      
-      // Add a placeholder message for the AI
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      let textBuffer = "";
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          
-          // Basic stream parsing (Adjust based on your exact Azure return format)
-          assistantContent += chunk;
+      const assistantId = (Date.now() + 1).toString();
 
-          setMessages((prev) => {
-            const newMsgs = [...prev];
-            // Update the very last message (which is the AI's)
-            newMsgs[newMsgs.length - 1].content = assistantContent; 
-            return newMsgs;
-          });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && last.id === assistantId) {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                  );
+                }
+                return [
+                  ...prev,
+                  {
+                    id: assistantId,
+                    role: "assistant",
+                    content: assistantContent,
+                    timestamp: new Date(),
+                  },
+                ];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
         }
       }
     } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [
-        ...prev, 
-        { role: "assistant", content: "Sorry, I am having trouble connecting to the server right now." }
-      ]);
+      console.error("Chat error:", error);
+      toast({
+        title: "Connection Error",
+        description: error instanceof Error ? error.message : "Failed to get response",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
-    // This div calculates height automatically to fit your screen (100vh - header space)
-    <div className="flex flex-col h-[calc(100vh-10rem)] w-full max-w-4xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
-      
-      {/* Header Banner */}
-      <div className="bg-emerald-600 p-4 text-white flex items-center gap-3 shadow-md z-10">
-        <div className="bg-white/20 p-2 rounded-full">
-          <Bot className="w-5 h-5" />
+    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-3xl mx-auto">
+      {/* Chat Header */}
+      <div className="glass-card rounded-t-2xl p-4 flex items-center justify-between border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl gradient-calm flex items-center justify-center">
+            <Bot className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="font-display font-semibold text-foreground">MindfulAI Assistant</h2>
+            <p className="text-xs text-muted-foreground">Powered by Azure OpenAI</p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-semibold text-sm md:text-base">MindfulAI Assistant</h2>
-          <p className="text-xs text-emerald-100">Powered by Azure OpenAI</p>
+        <div className="flex items-center gap-2 text-xs text-primary">
+          <Shield className="w-4 h-4" />
+          <span>Encrypted</span>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50">
-        {messages.map((msg, i) => (
-          <div 
-            key={i} 
-            className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-card/50">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex items-start gap-3 animate-fade-in ${
+              message.role === "user" ? "flex-row-reverse" : ""
+            }`}
           >
-            {/* Avatar Icon */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
-              msg.role === 'assistant' ? 'bg-white text-emerald-600 border border-slate-100' : 'bg-emerald-600 text-white'
-            }`}>
-              {msg.role === 'assistant' ? <Bot size={18} /> : <User size={18} />}
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                message.role === "assistant"
+                  ? "gradient-calm text-primary-foreground"
+                  : "gradient-warm text-accent-foreground"
+              }`}
+            >
+              {message.role === "assistant" ? (
+                <Bot className="w-4 h-4" />
+              ) : (
+                <User className="w-4 h-4" />
+              )}
             </div>
-            
-            {/* Chat Bubble */}
-            <div className={`p-3 md:p-4 rounded-2xl max-w-[85%] text-sm leading-relaxed shadow-sm ${
-              msg.role === 'user' 
-                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
-            }`}>
-              {msg.content}
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                message.role === "assistant"
+                  ? "bg-secondary text-secondary-foreground"
+                  : "gradient-calm text-primary-foreground"
+              }`}
+            >
+              <p className="text-sm leading-relaxed">{message.content}</p>
+              <span className="text-[10px] opacity-60 mt-1 block">
+                {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
           </div>
         ))}
-
-        {/* Loading Indicator */}
         {isLoading && (
-          <div className="flex gap-3">
-             <div className="w-8 h-8 rounded-full bg-white text-emerald-600 border border-slate-100 flex items-center justify-center">
-              <Bot size={18} />
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg gradient-calm flex items-center justify-center">
+              <Bot className="w-4 h-4 text-primary-foreground" />
             </div>
-            <div className="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none flex items-center gap-2 text-slate-500 text-sm shadow-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Thinking...</span>
+            <div className="bg-secondary rounded-2xl px-4 py-3">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             </div>
           </div>
         )}
@@ -144,25 +217,29 @@ const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white border-t border-slate-100 z-10">
-        <form 
-          onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-          className="flex gap-2 relative"
-        >
-          <input
+      <div className="glass-card rounded-b-2xl p-4 border-t">
+        <div className="flex items-end gap-3">
+          <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question here..."
-            className="flex-1 p-3 pl-4 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all placeholder:text-slate-400"
+            onKeyDown={handleKeyDown}
+            placeholder="Share what's on your mind..."
+            className="min-h-[48px] max-h-32 resize-none bg-background/50"
+            rows={1}
           />
-          <button 
-            type="submit" 
-            disabled={isLoading || !input.trim()}
-            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl px-5 transition-colors flex items-center justify-center shadow-sm"
+          <Button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            variant="hero"
+            size="icon"
+            className="h-12 w-12 flex-shrink-0"
           >
             <Send className="w-5 h-5" />
-          </button>
-        </form>
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2 text-center">
+          Your messages are encrypted and private. This AI is for support, not medical advice.
+        </p>
       </div>
     </div>
   );
