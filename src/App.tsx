@@ -9,7 +9,7 @@ import { UserCog, Heart, Activity, Brain, MessageSquare, Phone, Home } from "luc
 // PAGE IMPORTS
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
-import MoodTracker from "./pages/MoodTracker"; // Updated to match your file name
+import MoodTracker from "./pages/Mood";
 import Login from "./pages/Login"; // Updated to match your file name
 import NotFound from "./pages/NotFound";
 
