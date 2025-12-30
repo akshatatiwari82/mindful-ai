@@ -98,8 +98,8 @@ const ChatInterface = () => {
           <Bot className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="font-semibold text-sm md:text-base">Saarthi AI Live</h2>
-          <p className="text-xs text-emerald-100">Renaissance University</p>
+          <h2 className="font-semibold text-sm md:text-base">MindfulAI Assistant</h2>
+          <p className="text-xs text-emerald-100">Powered by Azure OpenAI</p>
         </div>
       </div>
 
