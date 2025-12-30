@@ -1,14 +1,35 @@
 import { useState } from "react";
-import { TrendingUp, Calendar, Smile, Meh, Frown, Heart, Zap, Cloud, Sun, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+import { 
+  TrendingUp, 
+  Calendar, 
+  Smile, 
+  Meh, 
+  Frown, 
+  Heart, 
+  Zap, 
+  Cloud, 
+  Sun, 
+  Loader2 
+} from "lucide-react";
 
-// Standard HTML version - No complex dependencies
+// Initialize Supabase
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
+
 const MoodTracker = () => {
+  const navigate = useNavigate();
+  
+  // State Management
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   
-  // Mock Data (so the list isn't empty)
+  // Mock Data (You can replace this with real data fetching later)
   const [entries, setEntries] = useState([
     { id: 1, mood: "good", energy: 7, note: "Feeling optimistic about the project!", date: "Just now" }
   ]);
@@ -21,29 +42,62 @@ const MoodTracker = () => {
     { value: "struggling", label: "Struggling", icon: <Frown className="w-8 h-8" />, color: "bg-rose-100 text-rose-600 border-rose-200" },
   ];
 
-  const handleSave = () => {
-    if (!selectedMood) return;
+  const handleSave = async () => {
     setIsSaving(true);
-    
-    // Simulate saving (Prevents crash if database is missing)
-    setTimeout(() => {
-      const newEntry = {
-        id: Date.now(),
+
+    // --- 🔒 AUTH CHECK START ---
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      alert("Please log in or register to save your mood history.");
+      navigate("/login"); // Redirects to your login page
+      setIsSaving(false);
+      return;
+    }
+    // --- 🔒 AUTH CHECK END ---
+
+    try {
+      console.log("Saving mood for user:", session.user.id);
+      
+      // OPTIONAL: Actual Database Insert Logic
+      /*
+      const { error } = await supabase.from('mood_entries').insert({
+        user_id: session.user.id,
         mood: selectedMood,
-        energy,
-        note,
-        date: new Date().toLocaleTimeString()
-      };
-      setEntries([newEntry, ...entries]);
+        energy: energy,
+        note: note
+      });
+      if (error) throw error;
+      */
+
+      // Update local UI for immediate feedback
+      setEntries([
+        { 
+          id: Date.now(), 
+          mood: selectedMood || "okay", 
+          energy, 
+          note, 
+          date: new Date().toLocaleTimeString() 
+        }, 
+        ...entries
+      ]);
+
+      // Reset Form
       setSelectedMood(null);
       setNote("");
+      setEnergy(5);
+      alert("Mood saved successfully!");
+
+    } catch (error) {
+      console.error("Error saving mood:", error);
+      alert("Failed to save entry. Please try again.");
+    } finally {
       setIsSaving(false);
-      alert("Mood saved locally! (Database disconnected for safety)");
-    }, 800);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-500 pt-24">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-800">Daily Check-in</h1>
         <p className="text-gray-500">How are you feeling right now?</p>
@@ -98,7 +152,7 @@ const MoodTracker = () => {
           />
         </div>
 
-        {/* Save Button (Standard HTML) */}
+        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={!selectedMood || isSaving}
@@ -120,7 +174,7 @@ const MoodTracker = () => {
         <div className="space-y-3">
           {entries.map((entry) => (
             <div key={entry.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div className={`w-3 h-3 rounded-full ${entry.mood === 'good' || entry.mood === 'great' ? 'bg-green-400' : 'bg-orange-400'}`} />
+              <div className={`w-3 h-3 rounded-full ${['good', 'great'].includes(entry.mood) ? 'bg-green-400' : 'bg-orange-400'}`} />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold capitalize text-gray-700">{entry.mood}</span>
