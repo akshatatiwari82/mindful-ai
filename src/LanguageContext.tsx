@@ -1,156 +1,110 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-// --- FULL DATA DICTIONARY ---
-export const translations = {
+type Language = 'en' | 'hi';
+
+// --- TRANSLATIONS ---
+const translations = {
   en: {
     dashboard: {
-      title: "Self-Care Exercises",
-      subtitle: "Practice mindfulness and find your calm",
-      startBtn: "Begin Exercise",
-      howTo: "How to practice:",
-      back: "Back to Dashboard",
-      active: "Active",
-      reset: "Reset"
+      title: "Mental Exercises",
+      subtitle: "Clinical tools for immediate relief",
+      startBtn: "Start Session",
+      back: "Back to Menu",
+      howTo: "How it works:",
     },
     exercises: {
       boxBreathing: {
         title: "Box Breathing",
-        desc: "Calm your nervous system with this 4-4-4-4 technique",
+        desc: "Reduce cortisol with rhythm.",
         duration: "4 min",
-        tutorial: [
-          "Inhale slowly for 4 seconds.",
-          "Hold your breath for 4 seconds.",
-          "Exhale slowly for 4 seconds.",
-          "Hold empty for 4 seconds."
-        ],
-        phases: {
-          inhale: "Inhale",
-          hold: "Hold",
-          exhale: "Exhale"
-        }
+        tutorial: ["Inhale for 4s", "Hold for 4s", "Exhale for 4s", "Hold for 4s"]
       },
       bodyScan: {
         title: "Body Scan",
-        desc: "Release tension by bringing awareness to each part of your body",
+        desc: "Release physical tension.",
         duration: "10 min",
-        tutorial: [
-          "Find a quiet space and sit comfortably.",
-          "Close your eyes and breathe deeply.",
-          "Focus on one body part at a time.",
-          "Release tension as you exhale."
-        ]
+        tutorial: ["Lie down comfortably", "Focus on your toes", "Move focus up to your head"]
       },
       grounding: {
         title: "5-4-3-2-1 Grounding",
-        desc: "Anchor yourself in the present moment",
+        desc: "Stop panic attacks instantly.",
         duration: "5 min",
-        tutorial: [
-          "Acknowledge 5 things you see.",
-          "Acknowledge 4 things you can touch.",
-          "Acknowledge 3 things you hear.",
-          "Acknowledge 2 things you smell.",
-          "Acknowledge 1 thing you taste."
-        ]
+        tutorial: ["Find 5 things you see", "Find 4 things you touch", "Find 3 things you hear", "Find 2 things you smell", "Find 1 thing you taste"]
       },
       lovingKindness: {
         title: "Loving Kindness",
-        desc: "Cultivate compassion for yourself and others",
-        duration: "8 min",
-        tutorial: ["Sit quietly", "Focus on your heart", "Send good wishes to yourself", "Send good wishes to others"]
+        desc: "Boost compassion & empathy.",
+        duration: "15 min",
+        tutorial: ["Visualize yourself", "Visualize a loved one", "Send positive wishes to both"]
+      },
+      cbt: {
+        title: "Cognitive Reframing",
+        desc: "Challenge negative thoughts.",
+        duration: "10 min",
+        tutorial: ["Write down the negative thought", "Examine the evidence", "Create a balanced thought"]
+      },
+      pmr: {
+        title: "Muscle Relaxation",
+        desc: "Release deep body tension.",
+        duration: "15 min",
+        tutorial: ["Tense a muscle group for 5s", "Release instantly", "Feel the tension leave"]
       }
-    },
-    emergency: {
-      title: "Crisis Support",
-      subtitle: "You are not alone. Help is available 24/7.",
-      police: "Police / General Emergency",
-      ambulance: "Ambulance",
-      suicide: "Tele-MANAS (Mental Health)",
-      call: "Call Now"
     }
   },
   hi: {
     dashboard: {
-      title: "आत्म-देखभाल व्यायाम",
-      subtitle: "माइंडफुलनेस का अभ्यास करें और अपनी शांति पाएं",
-      startBtn: "अभ्यास शुरू करें",
-      howTo: "अभ्यास कैसे करें:",
-      back: "डैशबोर्ड पर वापस जाएं",
-      active: "सक्रिय",
-      reset: "रीसेट"
+      title: "मानसिक व्यायाम",
+      subtitle: "तत्काल राहत के लिए नैदानिक उपकरण",
+      startBtn: "सत्र शुरू करें",
+      back: "वापस जाएं",
+      howTo: "यह कैसे काम करता है:",
     },
     exercises: {
       boxBreathing: {
-        title: "बॉक्स ब्रीदिंग (Box Breathing)",
-        desc: "इस 4-4-4-4 तकनीक के साथ अपने तंत्रिका तंत्र को शांत करें",
+        title: "बॉक्स ब्रीदिंग",
+        desc: "लय के साथ तनाव कम करें।",
         duration: "4 मिनट",
-        tutorial: [
-          "4 सेकंड के लिए धीरे-धीरे सांस लें।",
-          "4 सेकंड के लिए सांस रोकें।",
-          "4 सेकंड के लिए धीरे-धीरे सांस छोड़ें।",
-          "4 सेकंड के लिए खाली रहें।"
-        ],
-        phases: {
-          inhale: "सांस लें",
-          hold: "रुकें",
-          exhale: "सांस छोड़ें"
-        }
+        tutorial: ["4 सेकंड सांस लें", "4 सेकंड रोकें", "4 सेकंड सांस छोड़ें", "4 सेकंड रोकें"]
       },
       bodyScan: {
-        title: "बॉडी स्कैन (Body Scan)",
-        desc: "अपने शरीर के प्रत्येक भाग के प्रति जागरूकता लाकर तनाव मुक्त करें",
+        title: "बॉडी स्कैन",
+        desc: "शारीरिक तनाव दूर करें।",
         duration: "10 मिनट",
-        tutorial: [
-          "एक शांत जगह ढूंढें और आराम से बैठें।",
-          "अपनी आंखें बंद करें और गहरी सांस लें।",
-          "एक बार में शरीर के एक हिस्से पर ध्यान केंद्रित करें।",
-          "सांस छोड़ते समय तनाव को मुक्त करें।"
-        ]
+        tutorial: ["आराम से लेट जाएं", "पैरों की उंगलियों पर ध्यान दें", "सिर तक ध्यान ले जाएं"]
       },
       grounding: {
         title: "5-4-3-2-1 ग्राउंडिंग",
-        desc: "अपनी इंद्रियों का उपयोग करके वर्तमान में वापस आएं",
+        desc: "घबराहट के दौरे को तुरंत रोकें।",
         duration: "5 मिनट",
-        tutorial: [
-          "5 चीजें जो आप देख सकते हैं।",
-          "4 चीजें जो आप छू सकते हैं।",
-          "3 चीजें जो आप सुन सकते हैं।",
-          "2 चीजें जो आप सूंघ सकते हैं।",
-          "1 चीज जिसका आप स्वाद ले सकते हैं।"
-        ]
+        tutorial: ["5 चीजें देखें", "4 चीजें महसूस करें", "3 चीजें सुनें", "2 चीजें सूंघें", "1 चीज चखें"]
       },
       lovingKindness: {
-        title: "प्रेम और दया (Loving Kindness)",
-        desc: "अपने और दूसरों के लिए करुणा विकसित करें",
-        duration: "8 मिनट",
-        tutorial: ["शांत बैठें", "अपने दिल पर ध्यान दें", "शुभकामनाएं भेजें", "दूसरों को शुभकामनाएं भेजें"]
+        title: "प्रेम और करुणा",
+        desc: "सहानुभूति और दया बढ़ाएं।",
+        duration: "15 मिनट",
+        tutorial: ["खुद की कल्पना करें", "प्रियजन की कल्पना करें", "दोनों को शुभकामनाएं भेजें"]
+      },
+      cbt: {
+        title: "संज्ञानात्मक रिफ्रेमिंग",
+        desc: "नकारात्मक विचारों को चुनौती दें।",
+        duration: "10 मिनट",
+        tutorial: ["नकारात्मक विचार लिखें", "सबूत की जांच करें", "संतुलित विचार बनाएं"]
+      },
+      pmr: {
+        title: "मांसपेशी विश्राम",
+        desc: "शरीर के गहरे तनाव को छोड़ें।",
+        duration: "15 मिनट",
+        tutorial: ["मांसपेशियों को 5 सेकंड कसें", "तुरंत छोड़ दें", "तनाव को जाता हुआ महसूस करें"]
       }
-    },
-    emergency: {
-      title: "आपातकालीन सहायता",
-      subtitle: "आप अकेले नहीं हैं। मदद 24/7 उपलब्ध है।",
-      police: "पुलिस / सामान्य आपातकालीन",
-      ambulance: "एम्बुलेंस",
-      suicide: "टेली-मानस (मानसिक स्वास्थ्य)",
-      call: "अभी कॉल करें"
     }
   }
 };
 
-// --- SETUP PROVIDER ---
-type Language = 'en' | 'hi';
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: typeof translations.en;
-}
+const LanguageContext = createContext<any>(null);
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const [language, setLanguage] = useState<Language>('en');
-  
-  // Safe Fallback: If data is missing, use English as backup to prevent crashes
-  const t = translations[language] || translations['en'];
+  const t = translations[language];
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
@@ -159,10 +113,4 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error("useLanguage must be used within a LanguageProvider");
-  }
-  return context;
-};
+export const useLanguage = () => useContext(LanguageContext);
