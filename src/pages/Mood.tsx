@@ -1,12 +1,38 @@
 import { useState } from "react";
-import { Heart, Zap, Calendar, Smile, Meh, Frown, Cloud, Sun, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
+import { 
+  TrendingUp, 
+  Calendar, 
+  Smile, 
+  Meh, 
+  Frown, 
+  Heart, 
+  Zap, 
+  Cloud, 
+  Sun, 
+  Loader2,
+  LogOut
+} from "lucide-react";
 
-const Mood = () => {
+// Initialize Supabase
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
+
+const MoodTracker = () => {
+  const navigate = useNavigate();
+  
+  // State Management
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Mock Data
   const [entries, setEntries] = useState([
-    { id: 1, mood: "good", energy: 8, note: "Had a productive day!", date: "Today, 10:00 AM" }
+    { id: 1, mood: "good", energy: 7, note: "Feeling optimistic!", date: "Just now" }
   ]);
 
   const moodOptions = [
@@ -17,55 +43,102 @@ const Mood = () => {
     { value: "struggling", label: "Struggling", icon: <Frown className="w-8 h-8" />, color: "bg-rose-100 text-rose-600 border-rose-200" },
   ];
 
-  const handleSave = () => {
-    if (!selectedMood) return;
-    const newEntry = {
-      id: Date.now(),
-      mood: selectedMood,
-      energy,
-      note,
-      date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setEntries([newEntry, ...entries]);
-    setSelectedMood(null);
-    setNote("");
-    alert("Mood Logged!");
+  // TEMPORARY: Use this to clear your session for testing
+  const handleDebugSignOut = async () => {
+    await supabase.auth.signOut();
+    alert("You have been signed out. Try saving now!");
+    window.location.reload();
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    // --- 🔒 AUTH CHECK START ---
+    // We fetch the latest session state directly from Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // Check if session exists
+    if (!session) {
+      alert("🔒 Access Denied: You must be logged in to save your mood history.");
+      navigate("/login"); // Make sure you have a route for /login
+      setIsSaving(false);
+      return; // STOP execution here
+    }
+    // --- 🔒 AUTH CHECK END ---
+
+    try {
+      console.log("User is logged in:", session.user.email);
+      
+      // Update local UI
+      setEntries([
+        { 
+          id: Date.now(), 
+          mood: selectedMood || "okay", 
+          energy, 
+          note, 
+          date: new Date().toLocaleTimeString() 
+        }, 
+        ...entries
+      ]);
+
+      setSelectedMood(null);
+      setNote("");
+      setEnergy(5);
+      alert("Mood saved successfully!");
+
+    } catch (error) {
+      console.error("Error saving mood:", error);
+      alert("Failed to save entry.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-8 animate-in fade-in">
-      <div className="text-center">
+    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-500 pt-24">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col items-center space-y-2 relative">
         <h1 className="text-3xl font-bold text-gray-800">Daily Check-in</h1>
-        <p className="text-gray-500">Track your mood and energy levels</p>
+        <p className="text-gray-500">How are you feeling right now?</p>
+        
+        {/* DEBUG BUTTON: Click this if the app isn't asking for login */}
+        <button 
+          onClick={handleDebugSignOut}
+          className="text-xs text-red-500 flex items-center gap-1 hover:underline mt-2 opacity-70"
+        >
+          <LogOut className="w-3 h-3" /> (Debug) Force Sign Out
+        </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
-        {/* Mood Section */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-purple-500" /> How are you feeling?
-          </h2>
-          <div className="grid grid-cols-5 gap-3">
-            {moodOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedMood(option.value)}
-                className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${
-                  selectedMood === option.value ? `${option.color} border-current scale-105` : "border-transparent hover:bg-gray-50"
-                }`}
-              >
-                {option.icon}
-                <span className="text-xs font-medium mt-1 hidden sm:block">{option.label}</span>
-              </button>
-            ))}
-          </div>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6">
+        {/* Mood Selection */}
+        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <Heart className="w-5 h-5 text-purple-500" /> Select Mood
+        </h2>
+        <div className="grid grid-cols-5 gap-2 mb-6">
+          {moodOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setSelectedMood(option.value)}
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                selectedMood === option.value
+                  ? `${option.color} border-current scale-105 shadow-md`
+                  : "bg-gray-50 border-transparent hover:bg-gray-100"
+              }`}
+            >
+              {option.icon}
+              <span className="text-xs font-medium mt-1 hidden sm:block">{option.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Energy/Work Section */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-500" /> Energy & Work Capacity
-          </h2>
+        {/* Energy Slider */}
+        <div className="mb-6">
+          <label className="flex justify-between text-sm font-medium text-gray-700 mb-2">
+            <span className="flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-500"/> Energy Level</span>
+            <span className="text-gray-400">{energy}/10</span>
+          </label>
           <input
             type="range"
             min="1"
@@ -74,53 +147,20 @@ const Mood = () => {
             onChange={(e) => setEnergy(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-2">
-            <span>Low Energy</span>
-            <span className="font-bold text-purple-600">{energy}/10</span>
-            <span>High Energy</span>
-          </div>
         </div>
 
-        {/* Note Section */}
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Optional: What's on your mind?"
-          className="w-full p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          rows={3}
-        />
+        {/* Note Area */}
+        <div className="mb-6">
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note (optional)..."
+            className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 outline-none resize-none bg-white"
+            rows={3}
+          />
+        </div>
 
+        {/* Save Button */}
         <button
           onClick={handleSave}
-          disabled={!selectedMood}
-          className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          <Save className="w-4 h-4" /> Save Entry
-        </button>
-      </div>
-
-      {/* History */}
-      <div className="space-y-4">
-        <h3 className="font-bold text-gray-700 flex items-center gap-2">
-          <Calendar className="w-5 h-5" /> Recent History
-        </h3>
-        {entries.map((entry) => (
-          <div key={entry.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-3 h-3 rounded-full ${['good','great'].includes(entry.mood) ? 'bg-green-500' : 'bg-orange-500'}`} />
-              <div>
-                <p className="font-medium capitalize text-gray-800">{entry.mood}</p>
-                <p className="text-xs text-gray-400">{entry.date}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-              <Zap className="w-3 h-3 text-yellow-600" /> Energy: {entry.energy}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default Mood;
+          disabled={!selected
