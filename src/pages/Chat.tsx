@@ -6,17 +6,12 @@ const Chat = () => {
   return (
     <>
       <Helmet>
-        <title>AI Emotional Support | MindfulAI</title>
-        <meta 
-          name="description" 
-          content="Private, encrypted conversations powered by Azure OpenAI." 
-        />
+        <title>AI Emotional Support Chat | MindfulAI</title>
+        <meta name="description" content="Talk to our AI emotional support chatbot. Private, encrypted conversations powered by Azure OpenAI for empathetic mental health support." />
       </Helmet>
-      
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 pt-24 pb-8">
-          {/* All the complex code (inputs, buttons, messages) is inside this component */}
           <ChatInterface />
         </main>
       </div>
