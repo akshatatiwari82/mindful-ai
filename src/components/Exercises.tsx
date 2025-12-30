@@ -1,12 +1,11 @@
 import { useState } from "react";
 import BodyScan from "./BodyScan";
 import BreathingExercise from "./BreathingExercise";
-import StepBasedExercise from "./StepBasedExercise"; 
+import StepBasedExercise from "./StepBasedExercise"; // Import the new Universal Player
 import { LanguageProvider, useLanguage } from "../LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-// [ADDED] Imported BookOpen and Moon for the new exercises
-import { Wind, Brain, Heart, Sparkles, Timer, Play, ChevronLeft, BookOpen, Moon } from "lucide-react";
+import { Wind, Brain, Heart, Sparkles, Timer, Play, ChevronLeft } from "lucide-react";
 
 const ExercisesContent = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -45,33 +44,6 @@ const ExercisesContent = () => {
       duration: t.exercises.lovingKindness.duration,
       icon: <Heart className="w-6 h-6" />,
       tutorial: t.exercises.lovingKindness.tutorial
-    },
-    // --- [NEW EXERCISE 1] CBT REFRAMING ---
-    {
-      id: "cbt-reframing",
-      // Fallback text provided in case translation key is missing
-      title: t.exercises.cbt?.title || "Cognitive Reframing", 
-      description: t.exercises.cbt?.desc || "Challenge negative thoughts with logic.",
-      duration: "10 min",
-      icon: <BookOpen className="w-6 h-6" />,
-      tutorial: [
-        "Identify the negative thought.",
-        "Check the facts.",
-        "Reframe with a balanced perspective."
-      ]
-    },
-    // --- [NEW EXERCISE 2] PMR RELAXATION ---
-    {
-      id: "pmr",
-      title: t.exercises.pmr?.title || "Muscle Relaxation",
-      description: t.exercises.pmr?.desc || "Release tension from your body.",
-      duration: "15 min",
-      icon: <Moon className="w-6 h-6" />,
-      tutorial: [
-        "Tense a muscle group for 5 seconds.",
-        "Release and feel the relaxation.",
-        "Move to the next muscle group."
-      ]
     }
   ];
 
@@ -142,17 +114,6 @@ const ExercisesContent = () => {
             {selectedExercise === "loving-kindness" && (
               <StepBasedExercise exerciseType="lovingKindness" onBack={() => setIsStarted(false)} />
             )}
-
-            {/* --- [NEW] 5. CBT REFRAMING --- */}
-            {selectedExercise === "cbt-reframing" && (
-              <StepBasedExercise exerciseType="cbt" onBack={() => setIsStarted(false)} />
-            )}
-
-            {/* --- [NEW] 6. PMR RELAXATION --- */}
-            {selectedExercise === "pmr" && (
-              <StepBasedExercise exerciseType="pmr" onBack={() => setIsStarted(false)} />
-            )}
-
           </div>
         ) : (
           // --- PREVIEW / TUTORIAL MODE ---
