@@ -6,14 +6,17 @@ const Chat = () => {
   return (
     <>
       <Helmet>
-        {/* I updated the title to match your University App goal */}
-        <title>Mindful AI</title>
-        <meta name="description" content="Powered by Azure OpenAI." />
+        <title>AI Emotional Support | MindfulAI</title>
+        <meta 
+          name="description" 
+          content="Private, encrypted conversations powered by Azure OpenAI." 
+        />
       </Helmet>
+      
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 pt-24 pb-8">
-          {/* This component will handle all the logic inside */}
+          {/* All the complex code (inputs, buttons, messages) is inside this component */}
           <ChatInterface />
         </main>
       </div>
