@@ -1,75 +1,151 @@
 import { useState } from "react";
-import { Wind, Anchor, Brain, Play, Pause, Clock } from "lucide-react";
+import StepBasedExercise from "./StepBasedExercise"; 
+import { LanguageProvider, useLanguage } from "../LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Wind, Brain, Heart, Sparkles, Timer, Play, ChevronLeft, BookOpen, Moon } from "lucide-react";
 
-const Exercises = () => {
-  const [activeId, setActiveId] = useState<number | null>(null);
+// --- MAIN CONTENT COMPONENT ---
+const ExercisesContent = () => {
+  const { language, setLanguage, t } = useLanguage();
+  const [isStarted, setIsStarted] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<string | null>("box-breathing");
 
-  const exercises = [
+  // Definition of all exercises including the NEW ones
+  const exercisesList = [
     {
-      id: 1,
-      title: "Box Breathing",
-      category: "Anxiety Relief",
-      duration: "4 min",
-      description: "Inhale 4s, Hold 4s, Exhale 4s, Hold 4s. Proven to lower cortisol.",
-      icon: <Wind className="w-6 h-6 text-blue-600" />,
-      color: "bg-blue-50 border-blue-100"
+      id: "box-breathing",
+      title: t.exercises.boxBreathing.title,
+      description: t.exercises.boxBreathing.desc,
+      duration: t.exercises.boxBreathing.duration,
+      icon: <Wind className="w-6 h-6" />,
+      tutorial: t.exercises.boxBreathing.tutorial
     },
     {
-      id: 2,
-      title: "5-4-3-2-1 Grounding",
-      category: "Panic Attack",
-      duration: "5 min",
-      description: "Acknowledge 5 things you see, 4 you feel, 3 you hear...",
-      icon: <Anchor className="w-6 h-6 text-purple-600" />,
-      color: "bg-purple-50 border-purple-100"
+      id: "grounding",
+      title: t.exercises.grounding.title,
+      description: t.exercises.grounding.desc,
+      duration: t.exercises.grounding.duration,
+      icon: <Sparkles className="w-6 h-6" />,
+      tutorial: t.exercises.grounding.tutorial
     },
     {
-      id: 3,
-      title: "Cognitive Reframing",
-      category: "CBT Therapy",
-      duration: "10 min",
-      description: "Identify a negative thought and challenge it with evidence.",
-      icon: <Brain className="w-6 h-6 text-emerald-600" />,
-      color: "bg-emerald-50 border-emerald-100"
+      id: "loving-kindness",
+      title: t.exercises.lovingKindness.title,
+      description: t.exercises.lovingKindness.desc,
+      duration: t.exercises.lovingKindness.duration,
+      icon: <Heart className="w-6 h-6" />,
+      tutorial: t.exercises.lovingKindness.tutorial
+    },
+    {
+      id: "cbt-reframing",
+      title: t.exercises.cbt.title,
+      description: t.exercises.cbt.desc,
+      duration: t.exercises.cbt.duration,
+      icon: <BookOpen className="w-6 h-6" />,
+      tutorial: t.exercises.cbt.tutorial
+    },
+    {
+      id: "pmr",
+      title: t.exercises.pmr.title,
+      description: t.exercises.pmr.desc,
+      duration: t.exercises.pmr.duration,
+      icon: <Moon className="w-6 h-6" />,
+      tutorial: t.exercises.pmr.tutorial
     }
   ];
 
+  const currentExerciseData = exercisesList.find((e) => e.id === selectedExercise);
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6 animate-in fade-in">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Mental Exercises</h1>
-        <p className="text-gray-500">Clinical tools for immediate relief</p>
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 px-4 animate-in fade-in">
+      
+      {/* LANGUAGE SWITCHER */}
+      <div className="flex justify-end pt-4">
+        <div className="bg-white/50 backdrop-blur-sm p-1 rounded-full border border-slate-200 flex gap-1">
+          <button onClick={() => setLanguage('en')} className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${language === 'en' ? 'bg-slate-900 text-white' : 'text-slate-500'}`}>ENG</button>
+          <button onClick={() => setLanguage('hi')} className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${language === 'hi' ? 'bg-slate-900 text-white' : 'text-slate-500'}`}>हिंदी</button>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {exercises.map((ex) => (
-          <div key={ex.id} className={`p-6 rounded-2xl border ${ex.color} transition-all hover:shadow-md`}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-white rounded-xl shadow-sm">{ex.icon}</div>
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-white px-2 py-1 rounded-lg">
-                {ex.category}
-              </span>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold mb-2 text-slate-800">{t.dashboard.title}</h1>
+        <p className="text-slate-500">{t.dashboard.subtitle}</p>
+      </div>
+
+      {/* EXERCISE GRID (Menu) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {exercisesList.map((ex) => (
+          <Card 
+            key={ex.id} 
+            className={`p-5 cursor-pointer transition-all hover:shadow-lg ${selectedExercise === ex.id ? 'border-2 border-slate-900 bg-slate-50' : 'border-transparent bg-white shadow-sm'}`} 
+            onClick={() => { setSelectedExercise(ex.id); setIsStarted(false); }}
+          >
+            <div className="flex gap-4">
+              <div className="bg-white p-3 rounded-xl text-slate-700 shadow-sm border border-slate-100">{ex.icon}</div>
+              <div>
+                <h3 className="font-bold text-slate-800">{ex.title}</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-2 line-clamp-1">{ex.description}</p>
+                <div className="flex items-center text-xs text-slate-400 font-medium">
+                  <Timer className="w-3 h-3 mr-1"/> {ex.duration}
+                </div>
+              </div>
             </div>
-            
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{ex.title}</h3>
-            <p className="text-sm text-gray-600 mb-6">{ex.description}</p>
-            
-            <div className="flex items-center justify-between mt-auto">
-              <span className="flex items-center gap-1 text-xs font-bold text-gray-400">
-                <Clock className="w-3 h-3" /> {ex.duration}
-              </span>
-              <button
-                onClick={() => setActiveId(activeId === ex.id ? null : ex.id)}
-                className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:bg-black transition-colors"
-              >
-                {activeId === ex.id ? <><Pause className="w-4 h-4"/> Pause</> : <><Play className="w-4 h-4"/> Start</>}
-              </button>
-            </div>
-          </div>
+          </Card>
         ))}
+      </div>
+
+      {/* ACTIVE AREA */}
+      <div className="mt-8">
+        {isStarted && selectedExercise ? (
+          // --- PLAYER MODE ---
+          <div className="animate-in fade-in slide-in-from-bottom-4">
+            <Button variant="ghost" onClick={() => setIsStarted(false)} className="mb-4 hover:bg-slate-100">
+              <ChevronLeft className="w-4 h-4 mr-2" /> {t.dashboard.back}
+            </Button>
+            
+            {/* The Universal Player handles ALL exercises now */}
+            <StepBasedExercise exerciseType={selectedExercise} onBack={() => setIsStarted(false)} />
+          </div>
+        ) : (
+          // --- TUTORIAL / PREVIEW MODE ---
+          <Card className="p-8 text-center border-none shadow-xl bg-white/80 backdrop-blur-md">
+             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-700">
+               {currentExerciseData?.icon}
+             </div>
+             <h2 className="text-2xl font-bold mb-4 text-slate-800">{currentExerciseData?.title}</h2>
+             
+             {currentExerciseData?.tutorial && (
+               <div className="bg-slate-50 border border-slate-100 rounded-xl p-6 mb-8 text-left max-w-lg mx-auto">
+                 <h4 className="font-semibold flex items-center gap-2 mb-4 text-slate-700">
+                   <Sparkles className="w-4 h-4" /> {t.dashboard.howTo}
+                 </h4>
+                 <ul className="space-y-3">
+                   {currentExerciseData.tutorial.map((step, i) => (
+                     <li key={i} className="flex gap-3 text-sm text-slate-600">
+                       <span className="font-bold text-slate-700 bg-white border border-slate-200 w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">{i+1}</span>
+                       {step}
+                     </li>
+                   ))}
+                 </ul>
+               </div>
+             )}
+
+             <Button size="lg" className="px-8 bg-slate-900 text-white hover:bg-black" onClick={() => setIsStarted(true)}>
+               <Play className="mr-2 w-5 h-5" /> {t.dashboard.startBtn}
+             </Button>
+          </Card>
+        )}
       </div>
     </div>
   );
 };
 
-export default Exercises;
+// Wrap everything in LanguageProvider
+const ExercisesSection = () => (
+  <LanguageProvider>
+    <ExercisesContent />
+  </LanguageProvider>
+);
+
+export default ExercisesSection;
