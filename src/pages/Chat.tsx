@@ -7,8 +7,8 @@ const Chat = () => {
     <>
       <Helmet>
         {/* I updated the title to match your University App goal */}
-        <title>Saarthi AI | Renaissance University</title>
-        <meta name="description" content="University assistant powered by Azure OpenAI." />
+        <title>Mindful AI</title>
+        <meta name="description" content="Powered by Azure OpenAI." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navigation />
