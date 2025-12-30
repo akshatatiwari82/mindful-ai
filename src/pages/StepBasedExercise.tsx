@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, RotateCcw, Check, Wind, BookOpen, Moon, Sparkles, Heart, Mic, MicOff } from "lucide-react";
+import { ChevronRight, Check, Wind, BookOpen, Moon, Sparkles, Heart, Volume2, VolumeX } from "lucide-react";
 
 // --- EXERCISE DATA ---
 const exercisesData = {
@@ -20,7 +20,7 @@ const exercisesData = {
   grounding: {
     color: "bg-purple-50 text-purple-700",
     icon: <Sparkles className="w-6 h-6" />,
-    autoAdvanceSeconds: 15, // Longer time to look around
+    autoAdvanceSeconds: 15,
     steps: [
       { text: "Look around you.", sub: "Find 5 things you can SEE." },
       { text: "Touch something.", sub: "Find 4 things you can FEEL." },
@@ -44,7 +44,7 @@ const exercisesData = {
     color: "bg-emerald-50 text-emerald-700",
     icon: <BookOpen className="w-6 h-6" />,
     hasInput: true,
-    autoAdvanceSeconds: null, // No auto-advance for typing
+    autoAdvanceSeconds: null, 
     steps: [
       { text: "Negative Thought", sub: "What is upsetting you right now?", inputPlaceholder: "I feel like I failed..." },
       { text: "Evidence Check", sub: "Is this 100% true? What proof do you have against it?", inputPlaceholder: "I actually did well on..." },
@@ -72,11 +72,26 @@ const StepBasedExercise = ({ exerciseType, onBack }: { exerciseType: string, onB
   const [completed, setCompleted] = useState(false);
   const [userInputs, setUserInputs] = useState<string[]>(new Array(data.steps.length).fill(""));
   
-  // VOICE CONTROL STATE
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  // VOICE GUIDANCE STATE (Default: ON)
+  const [isMuted, setIsMuted] = useState(false);
 
   const progress = ((currentStep + 1) / data.steps.length) * 100;
+
+  // --- TTS FUNCTION ---
+  const speakInstruction = (text: string, sub: string) => {
+    if (isMuted) return;
+    
+    // Stop any previous speech
+    window.speechSynthesis.cancel();
+
+    // Create new speech
+    const utterance = new SpeechSynthesisUtterance(`${text}. ${sub}`);
+    utterance.rate = 0.9; // Slightly slower for relaxation
+    utterance.pitch = 1;
+    
+    // Speak
+    window.speechSynthesis.speak(utterance);
+  };
 
   // --- NAVIGATION LOGIC ---
   const handleNext = () => {
@@ -99,10 +114,19 @@ const StepBasedExercise = ({ exerciseType, onBack }: { exerciseType: string, onB
     setUserInputs(newInputs);
   };
 
+  // --- TRIGGER SPEECH ON STEP CHANGE ---
+  useEffect(() => {
+    if (!completed) {
+      const step = data.steps[currentStep];
+      speakInstruction(step.text, step.sub);
+    }
+    // Cleanup: Stop talking if user leaves component
+    return () => window.speechSynthesis.cancel();
+  }, [currentStep, completed, isMuted]);
+
   // --- AUTO ADVANCE TIMER ---
   useEffect(() => {
     let timer: any;
-    // Only auto-advance if it's set in data AND not completed
     if (data.autoAdvanceSeconds && !completed) {
       timer = setTimeout(() => {
         handleNext();
@@ -111,39 +135,6 @@ const StepBasedExercise = ({ exerciseType, onBack }: { exerciseType: string, onB
     return () => clearTimeout(timer);
   }, [currentStep, completed, data.autoAdvanceSeconds]);
 
-  // --- VOICE CONTROL SETUP ---
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        console.log("Voice Command heard:", transcript);
-
-        if (transcript.includes("next") || transcript.includes("go") || transcript.includes("yes")) {
-          handleNext();
-        } else if (transcript.includes("back") || transcript.includes("previous")) {
-          handleBack();
-        } else if (transcript.includes("stop") || transcript.includes("exit")) {
-          onBack();
-        }
-      };
-    }
-  }, []);
-
-  const toggleVoice = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current?.start();
-      setIsListening(true);
-      alert("Voice Control Active! Try saying 'Next' or 'Back'.");
-    }
-  };
 
   // --- COMPLETED VIEW ---
   if (completed) {
@@ -168,13 +159,16 @@ const StepBasedExercise = ({ exerciseType, onBack }: { exerciseType: string, onB
           <span className="font-bold opacity-90">Step {currentStep + 1}/{data.steps.length}</span>
         </div>
         
-        {/* VOICE TOGGLE BUTTON */}
+        {/* MUTE/UNMUTE BUTTON */}
         <button 
-          onClick={toggleVoice}
-          className={`p-2 rounded-full transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/20 hover:bg-white/30 text-current'}`}
-          title={isListening ? "Listening... Say 'Next'" : "Enable Voice Control"}
+          onClick={() => {
+            if (!isMuted) window.speechSynthesis.cancel();
+            setIsMuted(!isMuted);
+          }}
+          className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-current transition-all"
+          title={isMuted ? "Unmute Voice Guidance" : "Mute Voice Guidance"}
         >
-           {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
       </div>
 
