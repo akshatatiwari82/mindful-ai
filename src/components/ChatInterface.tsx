@@ -14,7 +14,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: "assistant", 
-      content: "Hello! I am Saarthi, your Renaissance University assistant. Ask me about your syllabus, exams, or campus events!" 
+      content: "Hello! I'm here to listen and support you. How are you feeling today? Remember, this is a safe space, and our conversation is end-to-end encrypted. 💚" 
     }
   ]);
   const [input, setInput] = useState("");
@@ -81,7 +81,7 @@ const ChatInterface = () => {
       console.error("Error:", error);
       setMessages((prev) => [
         ...prev, 
-        { role: "assistant", content: "Sorry, I am having trouble connecting to the university server right now." }
+        { role: "assistant", content: "Sorry, I am having trouble connecting to the server right now." }
       ]);
     } finally {
       setIsLoading(false);
