@@ -5,10 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
-// --- FIX: Use the '@' alias for a safer import ---
-// If your file is named 'navbar.tsx' (lowercase), change this to "@/components/navbar"
-import Navbar from "@/components/NavBar";
+// Components
+import Navbar from "@/components/NavBar"; // Ensure CamelCase matches your file
+import Placeholder from "@/components/Placeholder"; // Import the placeholder
 
+// Pages
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Mood from "./pages/Mood"; 
@@ -41,6 +42,12 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/mood" element={<Mood />} />
+              
+              {/* ✅ ADDED THESE ROUTES TO FIX 404s */}
+              <Route path="/exercises" element={<Placeholder title="Exercises" />} />
+              <Route path="/emergency" element={<Placeholder title="Emergency Support" />} />
+              <Route path="/therapist" element={<Placeholder title="Therapist Portal" />} />
+              
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
