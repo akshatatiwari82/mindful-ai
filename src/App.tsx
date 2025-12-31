@@ -1,51 +1,34 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/hooks/useAuth";
+import Navbar from "./components/Navbar";
 
-// 1. IMPORT THE LANGUAGE PROVIDER
-import { LanguageProvider } from "./LanguageContext"; 
+// Temporary components so the app doesn't crash while you build the files
+const Home = () => <div className="p-10 text-center"><h1>Welcome to MindfulAI</h1></div>;
+const Chat = () => <div className="p-10 text-center"><h1>AI Therapy Chat</h1></div>;
+const MoodTracker = () => <div className="p-10 text-center"><h1>Your Mood History</h1></div>;
+const Exercises = () => <div className="p-10 text-center"><h1>Mindfulness Exercises</h1></div>;
+const Emergency = () => <div className="p-10 text-center text-red-600"><h1>Emergency Resources</h1></div>;
+const TherapistPortal = () => <div className="p-10 text-center"><h1>Therapist Portal</h1></div>;
 
-import Index from "./pages/Index";
-import Chat from "./pages/Chat";
-import Mood from "./pages/Mood";
-import Exercises from "./pages/Exercises";
-import Emergency from "./pages/Emergency";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import NavBar from "./components/NavBar";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {/* 2. WRAP THE APP WITH LANGUAGE PROVIDER HERE */}
-        <LanguageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/mood" element={<Mood />} />
-                <Route path="/exercises" element={<Exercises />} />
-                <Route path="/emergency" element={<Emergency />} />
-                <Route path="/NavBar" element={<NavBar />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
-);
+function App() {
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50">
+        {/* Navbar is OUTSIDE Routes so it shows on every page */}
+        <Navbar />
+        
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/mood-tracker" element={<MoodTracker />} />
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/emergency" element={<Emergency />} />
+            <Route path="/therapist" element={<TherapistPortal />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
+}
 
 export default App;
