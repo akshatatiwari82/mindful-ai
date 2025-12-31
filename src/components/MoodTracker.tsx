@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
 import { 
   TrendingUp, 
   Calendar, 
@@ -11,26 +9,18 @@ import {
   Zap, 
   Cloud, 
   Sun, 
-  Loader2,
-  LogOut
+  Loader2
 } from "lucide-react";
 
-// Initialize Supabase
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-);
-
 const MoodTracker = () => {
-  const navigate = useNavigate();
   
   // State Management
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [selectedMood, setSelectedMood] = useState(null);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   
-  // Mock Data
+  // Mock Data (Local state only)
   const [entries, setEntries] = useState([
     { id: 1, mood: "good", energy: 7, note: "Feeling optimistic!", date: "Just now" }
   ]);
@@ -43,39 +33,37 @@ const MoodTracker = () => {
     { value: "struggling", label: "Struggling", icon: <Frown className="w-8 h-8" />, color: "bg-rose-100 text-rose-600 border-rose-200" },
   ];
 
-  // TEMPORARY: Use this to clear your session for testing
-  const handleDebugSignOut = async () => {
-    await supabase.auth.signOut();
-    alert("You have been signed out. Try saving now!");
-    window.location.reload();
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
-      
-      // Update local UI
-      setEntries([
-        { 
-          id: Date.now(), 
-          mood: selectedMood || "okay", 
-          energy, 
-          note, 
-          date: new Date().toLocaleTimeString() 
-        }, 
-        ...entries
-      ]);
 
-      setSelectedMood(null);
-      setNote("");
-      setEnergy(5);
-      alert("Mood saved successfully!");
+    // Simulate a network delay for better UX
+    setTimeout(() => {
+      try {
+        // Update local UI state directly (No database check)
+        setEntries([
+          { 
+            id: Date.now(), 
+            mood: selectedMood || "okay", 
+            energy, 
+            note, 
+            date: new Date().toLocaleTimeString() 
+          }, 
+          ...entries
+        ]);
 
-    } catch (error) {
-      console.error("Error saving mood:", error);
-      alert("Failed to save entry.");
-    } finally {
-      setIsSaving(false);
-    }
+        // Reset Form
+        setSelectedMood(null);
+        setNote("");
+        setEnergy(5);
+        alert("Mood saved successfully!");
+
+      } catch (error) {
+        console.error("Error saving mood:", error);
+        alert("Failed to save entry.");
+      } finally {
+        setIsSaving(false);
+      }
+    }, 600); // 600ms artificial delay
   };
 
   return (
@@ -85,14 +73,6 @@ const MoodTracker = () => {
       <div className="flex flex-col items-center space-y-2 relative">
         <h1 className="text-3xl font-bold text-gray-800">Daily Check-in</h1>
         <p className="text-gray-500">How are you feeling right now?</p>
-        
-        {/* DEBUG BUTTON: Click this if the app isn't asking for login */}
-        <button 
-          onClick={handleDebugSignOut}
-          className="text-xs text-red-500 flex items-center gap-1 hover:underline mt-2 opacity-70"
-        >
-          <LogOut className="w-3 h-3" /> (Debug) Force Sign Out
-        </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6">
