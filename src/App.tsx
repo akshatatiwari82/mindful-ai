@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
 // --- COMPONENT IMPORTS ---
-import Navbar from "./components/Navbar"; // 👈 Make sure this path is correct for your project
+import Navbar from "src/components/NavBar.tsx"; // 👈 Make sure this path is correct for your project
 
 // --- PAGE IMPORTS ---
 import Index from "./pages/Index";
