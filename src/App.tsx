@@ -7,7 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 
 // --- FIX: Use the '@' alias for a safer import ---
 // If your file is named 'navbar.tsx' (lowercase), change this to "@/components/navbar"
-import Navbar from "@/components/Navbar"; 
+import Navbar from "@/components/NavBar";
 
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
