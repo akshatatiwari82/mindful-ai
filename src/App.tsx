@@ -16,6 +16,7 @@ import Exercises from "./pages/Exercises";
 import Emergency from "./pages/Emergency";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import NavBar from "./components/NavBar";
 
 const queryClient = new QueryClient();
 
