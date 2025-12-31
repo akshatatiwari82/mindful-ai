@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import NavBar from "./components/NaBar";
 import MoodTracker from "./components/MoodTracker";
 import Exercises from "./components/Exercises";
 import AdminDashboard from "./components/AdminDashboard";
