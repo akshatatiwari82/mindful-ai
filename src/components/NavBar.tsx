@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Menu, 
   X, 
@@ -10,21 +10,30 @@ import {
   Phone, 
   ShieldCheck, 
   LogOut,
-  User
+  User,
+  Stethoscope // Icon for Therapist
 } from "lucide-react";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Mock Sign Out Function
+  const handleSignOut = () => {
+    // In a real app, this would clear session tokens
+    alert("You have been signed out.");
+    navigate("/"); // Redirect to Home
+  };
 
   const navLinks = [
     { name: "Home", path: "/", icon: <Home className="w-4 h-4" /> },
     { name: "Chat", path: "/chat", icon: <MessageSquare className="w-4 h-4" /> },
     { name: "Mood Tracker", path: "/mood", icon: <Heart className="w-4 h-4" /> },
-    { name: "Exercises", path: "/exercises", icon: <Activity className="w-4 h-4" /> }, // Ensure you have this route or change path
-    { name: "Emergency", path: "/emergency", icon: <Phone className="w-4 h-4" /> },   // Ensure you have this route
+    { name: "Exercises", path: "/exercises", icon: <Activity className="w-4 h-4" /> },
+    { name: "Emergency", path: "/emergency", icon: <Phone className="w-4 h-4" /> },
   ];
 
   return (
@@ -36,13 +45,7 @@ const NavBar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
               <div className="bg-teal-600 p-1.5 rounded-lg">
-                {/* Brain Icon Representation */}
-                <svg 
-                  className="w-6 h-6 text-white" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
@@ -68,21 +71,29 @@ const NavBar = () => {
             ))}
           </div>
 
-          {/* RIGHT SIDE: Encryption Badge & Profile */}
-          <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              E2E Encrypted
-            </div>
-            
+          {/* RIGHT SIDE: Action Buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* Therapist Portal Button (Restored) */}
+            <Link 
+              to="/therapist" 
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded-full hover:bg-teal-100 transition-colors"
+            >
+              <Stethoscope className="w-4 h-4" />
+              Therapist
+            </Link>
+
             <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span className="hidden lg:inline">Student</span>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Encrypted
               </div>
-              <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors">
+              
+              <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+              >
                 <LogOut className="w-4 h-4" />
-                Sign Out
+                <span className="hidden lg:inline">Sign Out</span>
               </button>
             </div>
           </div>
@@ -118,8 +129,15 @@ const NavBar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="pt-4 mt-4 border-t border-gray-100">
-               <button className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50">
+            <div className="pt-4 mt-4 border-t border-gray-100 space-y-3">
+               <Link to="/therapist" className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-teal-700 hover:bg-teal-50">
+                <Stethoscope className="w-5 h-5" />
+                Therapist Portal
+               </Link>
+               <button 
+                 onClick={handleSignOut}
+                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:bg-red-50"
+               >
                 <LogOut className="w-5 h-5" />
                 Sign Out
               </button>
