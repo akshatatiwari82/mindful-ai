@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { 
-  TrendingUp, 
   Calendar, 
   Smile, 
   Meh, 
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 
 const MoodTracker = () => {
-  
   // State Management
   const [selectedMood, setSelectedMood] = useState(null);
   const [energy, setEnergy] = useState(5);
@@ -39,7 +37,7 @@ const MoodTracker = () => {
     // Simulate a network delay for better UX
     setTimeout(() => {
       try {
-        // Update local UI state directly (No database check)
+        // Update local UI state directly
         setEntries([
           { 
             id: Date.now(), 
@@ -63,14 +61,15 @@ const MoodTracker = () => {
       } finally {
         setIsSaving(false);
       }
-    }, 600); // 600ms artificial delay
+    }, 600); 
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-500 pt-24">
+    // Changed 'pt-24' to 'py-10' to fix the huge gap at the top
+    <div className="max-w-3xl mx-auto p-4 space-y-8 py-10 animate-in fade-in duration-500">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col items-center space-y-2 relative">
+      <div className="flex flex-col items-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-800">Daily Check-in</h1>
         <p className="text-gray-500">How are you feeling right now?</p>
       </div>
@@ -80,12 +79,14 @@ const MoodTracker = () => {
         <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <Heart className="w-5 h-5 text-purple-500" /> Select Mood
         </h2>
+        
+        {/* Fixed grid columns to prevent shifting */}
         <div className="grid grid-cols-5 gap-2 mb-6">
           {moodOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => setSelectedMood(option.value)}
-              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 ${
                 selectedMood === option.value
                   ? `${option.color} border-current scale-105 shadow-md`
                   : "bg-gray-50 border-transparent hover:bg-gray-100"
@@ -146,7 +147,7 @@ const MoodTracker = () => {
         <div className="space-y-3">
           {entries.map((entry) => (
             <div key={entry.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <div className={`w-3 h-3 rounded-full ${['good', 'great'].includes(entry.mood) ? 'bg-green-400' : 'bg-orange-400'}`} />
+              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${['good', 'great'].includes(entry.mood) ? 'bg-green-400' : 'bg-orange-400'}`} />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold capitalize text-gray-700">{entry.mood}</span>
