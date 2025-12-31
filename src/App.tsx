@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import NavBar from "./components/NavBar";
 
 // Temporary components so the app doesn't crash while you build the files
 const Home = () => <div className="p-10 text-center"><h1>Welcome to MindfulAI</h1></div>;
