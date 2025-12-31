@@ -7,7 +7,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import Home from "./components/Home";
 import Chat from "./components/Chat";
 import Emergency from "./components/Emergency";
-import Therapist portal from "./components/TherapistPortal";
+import TherapistPortal from "./components/TherapistPortal";
 
 function App() {
   return (
