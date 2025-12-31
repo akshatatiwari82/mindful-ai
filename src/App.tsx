@@ -1,60 +1,30 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import MoodTracker from "./components/MoodTracker";
+import Exercises from "./components/Exercises";
+import AdminDashboard from "./components/AdminDashboard";
 
-// Components
-import Navbar from "@/components/NavBar"; // Ensure CamelCase matches your file
-import Placeholder from "@/components/Placeholder"; // Import the placeholder
-
-// Pages
-import Index from "./pages/Index";
-import Chat from "./pages/Chat";
-import Mood from "./pages/Mood"; 
-import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
-
-const MainLayout = () => {
+function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="z-50 relative"> 
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        {/* Navbar stays at the top always */}
         <Navbar />
-      </div>
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-    </div>
-  );
-};
 
-const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        {/* Main Content Area */}
+        <main className="py-8">
           <Routes>
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/mood" element={<Mood />} />
-              
-              {/* ✅ ADDED THESE ROUTES TO FIX 404s */}
-              <Route path="/exercises" element={<Placeholder title="Exercises" />} />
-              <Route path="/emergency" element={<Placeholder title="Emergency Support" />} />
-              <Route path="/therapist" element={<Placeholder title="Therapist Portal" />} />
-              
-            </Route>
-            <Route path="*" element={<NotFound />} />
+            {/* The "/" path means this is the FIRST page you see (Home) */}
+            <Route path="/" element={<MoodTracker />} />
+            
+            {/* These are the add-on pages */}
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
-);
+        </main>
+      </div>
+    </BrowserRouter>
+  );
+}
 
 export default App;
