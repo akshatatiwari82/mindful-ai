@@ -1,32 +1,49 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import { AuthProvider } from "@/hooks/useAuth";
 
-// 1. Define simple components directly in this file to test
-const Home = () => <div className="p-10 text-2xl">🏠 Home Page Loaded</div>;
-const Chat = () => <div className="p-10 text-2xl">💬 Chat Page Loaded</div>;
-const MoodTracker = () => <div className="p-10 text-2xl">📊 Mood Tracker Loaded</div>;
+// 1. IMPORT THE LANGUAGE PROVIDER
+import { LanguageProvider } from "./LanguageContext"; 
 
-// 2. Simple Navbar for testing
-const Navbar = () => (
-  <nav className="p-4 bg-teal-600 text-white flex gap-4">
-    <Link to="/">Home</Link>
-    <Link to="/chat">Chat</Link>
-    <Link to="/mood-tracker">Mood</Link>
-  </nav>
+import Index from "./pages/Index";
+import Chat from "./pages/Chat";
+import Mood from "./pages/Mood";
+import Exercises from "./pages/Exercises";
+import Emergency from "./pages/Emergency";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        {/* 2. WRAP THE APP WITH LANGUAGE PROVIDER HERE */}
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/mood" element={<Mood />} />
+                <Route path="/exercises" element={<Exercises />} />
+                <Route path="/emergency" element={<Emergency />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/mood-tracker" element={<MoodTracker />} />
-        {/* Catch-all route for broken links */}
-        <Route path="*" element={<div className="p-10">404 - Not Found</div>} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
 
 export default App;
