@@ -1,20 +1,21 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import Navbar from "./components/Navbar";
 import MoodTracker from "./components/MoodTracker";
 import Exercises from "./components/Exercises";
 import AdminDashboard from "./components/AdminDashboard";
-// Import your new components here
-import Home from "./components/Home";
-import Chat from "./components/Chat";
-import Emergency from "./components/Emergency";
-import TherapistPortal from "./components/TherapistPortal";
+
+// Temporary Placeholders to stop the build error
+const Home = () => <div className="p-8">Home Page Content</div>;
+const Chat = () => <div className="p-8">AI Chat Interface</div>;
+const Emergency = () => <div className="p-8 text-red-600 font-bold">Emergency Contacts</div>;
+const TherapistPortal = () => <div className="p-8">Therapist Portal</div>;
 
 function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
         <Navbar />
-        <main className="py-8">
+        <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
