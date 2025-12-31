@@ -1,30 +1,62 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import MoodTracker from "./components/MoodTracker";
-import Exercises from "./components/Exercises";
-import AdminDashboard from "./components/AdminDashboard";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 
-function App() {
+// --- COMPONENT IMPORTS ---
+import Navbar from "./components/Navbar"; 
+
+// --- PAGE IMPORTS ---
+import Index from "./pages/Index";
+import Chat from "./pages/Chat";
+import Mood from "./pages/Mood"; 
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+// 1️⃣ Create a Layout Component
+// This wrapper ensures the Navbar is always visible and handles spacing
+const MainLayout = () => {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-        {/* Navbar stays at the top always */}
+    <div className="min-h-screen flex flex-col">
+      {/* Navbar with high z-index to stay on top of animations */}
+      <div className="z-50 relative"> 
         <Navbar />
-
-        {/* Main Content Area */}
-        <main className="py-8">
-          <Routes>
-            {/* The "/" path means this is the FIRST page you see (Home) */}
-            <Route path="/" element={<MoodTracker />} />
-            
-            {/* These are the add-on pages */}
-            <Route path="/exercises" element={<Exercises />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
       </div>
-    </BrowserRouter>
+      
+      {/* This <Outlet /> is where the pages (Home, Chat, Mood) will appear */}
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+    </div>
   );
-}
+};
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* 2️⃣ Wrap your pages inside the MainLayout */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/mood" element={<Mood />} />
+              {/* Add other pages here that need the Navbar */}
+            </Route>
+
+            {/* Pages WITHOUT Navbar (like 404) can go outside */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
+);
 
 export default App;
