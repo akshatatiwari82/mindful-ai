@@ -1,32 +1,30 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NavBar from "./components/NaBar";
-import MoodTracker from "./components/MoodTracker";
-import Exercises from "./components/Exercises";
-import AdminDashboard from "./components/AdminDashboard";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
-// Temporary Placeholders to stop the build error
-const Home = () => <div className="p-8">Home Page Content</div>;
-const Chat = () => <div className="p-8">AI Chat Interface</div>;
-const Emergency = () => <div className="p-8 text-red-600 font-bold">Emergency Contacts</div>;
-const TherapistPortal = () => <div className="p-8">Therapist Portal</div>;
+// 1. Define simple components directly in this file to test
+const Home = () => <div className="p-10 text-2xl">🏠 Home Page Loaded</div>;
+const Chat = () => <div className="p-10 text-2xl">💬 Chat Page Loaded</div>;
+const MoodTracker = () => <div className="p-10 text-2xl">📊 Mood Tracker Loaded</div>;
+
+// 2. Simple Navbar for testing
+const Navbar = () => (
+  <nav className="p-4 bg-teal-600 text-white flex gap-4">
+    <Link to="/">Home</Link>
+    <Link to="/chat">Chat</Link>
+    <Link to="/mood-tracker">Mood</Link>
+  </nav>
+);
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/mood-tracker" element={<MoodTracker />} />
-            <Route path="/exercises" element={<Exercises />} />
-            <Route path="/emergency" element={<Emergency />} />
-            <Route path="/therapist" element={<TherapistPortal />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
-      </div>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/mood-tracker" element={<MoodTracker />} />
+        {/* Catch-all route for broken links */}
+        <Route path="*" element={<div className="p-10">404 - Not Found</div>} />
+      </Routes>
     </BrowserRouter>
   );
 }
