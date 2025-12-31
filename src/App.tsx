@@ -5,10 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
-// --- CORRECT PAGE IMPORTS ---
+// --- COMPONENT IMPORTS ---
+import Navbar from "./components/Navbar"; // 👈 Make sure this path is correct for your project
+
+// --- PAGE IMPORTS ---
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
-import Mood from "./pages/Mood"; // FIXED: Imports from 'Mood.tsx'
+import Mood from "./pages/Mood"; 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,13 +23,19 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          {/* Global Navbar removed to prevent duplicates */}
+          
+          {/* ✅ Global Navbar placed here. 
+             It will appear on every page defined in Routes below.
+          */}
+          <Navbar />
+
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/mood" element={<Mood />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
